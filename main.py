@@ -15,39 +15,44 @@ Download data from Yahoo Finance, and import it into the csv file.
 unix_time is the time in unix format, we need to download the newes data from site.
 urllib.request.urlretrieve(url, destination) - download process, data.csv will be downloaded frum 'url' to 'destination'
 '''
-unix_time = int(time.time()) 
-destination = 'data.csv'
-url = 'https://query1.finance.yahoo.com/v7/finance/download/BTC-USD?period1=1410912000&period2={0}&interval=1d&events=history&includeAdjustedClose=true'.format(unix_time)
-urllib.request.urlretrieve(url, destination)
+
+response = input('This program is only a project depicting knowledge in machine learning!There are no things that can predict the price of cryptocurrencies! In the event that you lose money due to the difference between the prediction and the truth, the responsibility is solely on you. This warning is duplicated in ReadMe.md. If you agree with the terms of use - press 'Y', if not - 'N'.')
+if response == 'Y':
+    unix_time = int(time.time()) 
+    destination = 'data.csv'
+    url = 'https://query1.finance.yahoo.com/v7/finance/download/BTC-USD?period1=1410912000&period2={0}&interval=1d&events=history&includeAdjustedClose=true'.format(unix_time)
+    urllib.request.urlretrieve(url, destination)
 
 
-data = pd.read_csv('data.csv')
+    data = pd.read_csv('data.csv')
 
-projection = 1 # I need prediction for one day, so here will be 1
-
-
-data['prediction'] = data['Close'].shift(-projection) # Making prediction column in data.csv
-
-X = data[['Close']] # This line  selects the 'Close' column from the DataFrame 'data' and stores it in the 'X' settings.
-y = data['prediction'] # This line  selects the 'prediction' column from the DataFrame 'data' and stores it in the 'y' settings.
+    projection = 1 # I need prediction for one day, so here will be 1
 
 
+    data['prediction'] = data['Close'].shift(-projection) # Making prediction column in data.csv
 
-X = X[:-projection]
-#This code removes the last 'projection' lines from 'X', because there are no 'prediction' values ​​for these rows, we cannot predict future values ​​for these rows.
-y = y[:-projection]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42) 
-#This code splits the data into training and test samples in a ratio of 80:20.
+    X = data[['Close']] # This line  selects the 'Close' column from the DataFrame 'data' and stores it in the 'X' settings.
+    y = data['prediction'] # This line  selects the 'prediction' column from the DataFrame 'data' and stores it in the 'y' settings.
 
 
-'''
-I'll use Linear regression to make predictions, because this is easier way, but in future i'll be able to use better types
-'''
-model = LinearRegression() 
-model.fit(X_train, y_train) #training procedure
+
+    X = X[:-projection]
+    #This code removes the last 'projection' lines from 'X', because there are no 'prediction' values ​​for these rows, we cannot predict future values ​​for these rows.
+    y = y[:-projection]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42) 
+    #This code splits the data into training and test samples in a ratio of 80:20.
 
 
-print('Tomorrow BTC may be', round(model.predict(data[['Close']][-projection:])[0], 2), '$') # I am adjusting the value to cents since it is the smallest unit 
+    '''
+    I'll use Linear regression to make predictions, because this is easier way, but in future i'll be able to use better types
+    '''
+    model = LinearRegression() 
+    model.fit(X_train, y_train) #training procedure
 
-path = 'data.csv' #Clear trash after program execution
-os.remove(path)
+
+    print('Tomorrow BTC may be', round(model.predict(data[['Close']][-projection:])[0], 2), '$') # I am adjusting the value to cents since it is the smallest unit 
+
+    path = 'data.csv' #Clear trash after program execution
+    os.remove(path)
+else:
+    print('Restart script to use it.')
