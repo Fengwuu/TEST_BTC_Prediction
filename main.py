@@ -16,7 +16,7 @@ unix_time is the time in unix format, we need to download the newes data from si
 urllib.request.urlretrieve(url, destination) - download process, data.csv will be downloaded frum 'url' to 'destination'
 '''
 
-response = input('This program is only a project depicting knowledge in machine learning!There are no things that can predict the price of cryptocurrencies! In the event that you lose money due to the difference between the prediction and the truth, the responsibility is solely on you. This warning is duplicated in ReadMe.md. If you agree with the terms of use - press 'Y', if not - 'N'.')
+response = input('This program is only a project depicting knowledge in machine learning!There are no things that can predict the price of cryptocurrencies! In the event that you lose money due to the difference between the prediction and the truth, the responsibility is solely on you. This warning is duplicated in ReadMe.md. If you agree with the terms of use - press "Y", if not - "N".')
 if response == 'Y':
     unix_time = int(time.time()) 
     destination = 'data.csv'
