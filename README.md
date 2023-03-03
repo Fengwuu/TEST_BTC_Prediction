@@ -30,7 +30,7 @@ No one guarantees the accuracy of the data! In the event that you have lost mone
 
 ```bash
 git clone https://github.com/Fengwuu/TEST_BTC_Prediction
-
+```
 ## Usage
 ```bash
 python -m venv venv
