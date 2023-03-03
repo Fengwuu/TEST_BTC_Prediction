@@ -5,6 +5,15 @@ import numpy as np
 import time
 import urllib.request
 import os
+import sqlite3
+from sqlite3 import Error
+'''
+Приветствую, Павел! Это послание Вам. Спешу сообщить, что я выбрал СКЛайт, поскольку проект простой, и не испытывает нагрузки, так что я считаю
+самым нормальным способом по соотношению время/польза. Использовать постгрес, или подобные вещи - не проблема, просто посчитал избыточным
+Так же были идеи переписать полностью модель для обучения на своих ошибках на другие методы, но признаюсь, пока что тяжело дается для освоения, 
+но я думаю, что это не проблема в будущем
+'''
+
 '''
 Import required libraries. Firstly configure virtual environment ('python -m venv venv'), activete, using 'venv/Scripts/activate' for WIN, and
 'source env/bin/activate' for Linux. After run 'pip install -r requirements.txt', after run python.exe main.py.
@@ -16,8 +25,8 @@ unix_time is the time in unix format, we need to download the newes data from si
 urllib.request.urlretrieve(url, destination) - download process, data.csv will be downloaded frum 'url' to 'destination'
 '''
 
-response = input('This program is only a project depicting knowledge in machine learning!There are no things that can predict the price of cryptocurrencies! In the event that you lose money due to the difference between the prediction and the truth, the responsibility is solely on you. This warning is duplicated in ReadMe.md. If you agree with the terms of use - press "Y", if not - "N".')
-if response == 'Y':
+response = input('This program is only a project depicting knowledge in machine learning!There are no things that can predict the price of cryptocurrencies! In the event that you lose money due to the difference between the prediction and the truth, the responsibility is solely on you. This warning is duplicated in ReadMe.md. If you agree with the terms of use - press "Y", if not - "N": \n')
+if response == 'Y' or 'y':
     unix_time = int(time.time()) 
     destination = 'data.csv'
     url = 'https://query1.finance.yahoo.com/v7/finance/download/BTC-USD?period1=1410912000&period2={0}&interval=1d&events=history&includeAdjustedClose=true'.format(unix_time)
@@ -49,10 +58,45 @@ if response == 'Y':
     model = LinearRegression() 
     model.fit(X_train, y_train) #training procedure
 
+    predictions = model.predict(X_test)
+    # errors to retrain the model
+    errors = np.abs(predictions - y_test)
+    mean_error = np.mean(errors)
 
-    print('Tomorrow BTC may be', round(model.predict(data[['Close']][-projection:])[0], 2), '$') # I am adjusting the value to cents since it is the smallest unit 
+    print('Mean error:', round(mean_error, 2))
+    # Retrain the model with mistakes again
+    new_X_train = np.concatenate((X_train, X_test[errors > mean_error]), axis=0)
+    new_y_train = np.concatenate((y_train, y_test[errors > mean_error]), axis=0)
 
-    path = 'data.csv' #Clear trash after program execution
-    os.remove(path)
-else:
+    model.fit(new_X_train, new_y_train) #training procedure on errors
+    #getting the results and make variable to use in DB part of script
+    next_day_price = round(model.predict(data[['Close']][-projection:])[0], 2)
+    print('Tomorrow BTC may be', next_day_price, '$')
+
+# Save the prediction to the database
+
+    conn = sqlite3.connect('predictions.db')
+    cursor = conn.cursor()
+
+    
+    #Create table with predictions, and check if the prediction table exists
+    cursor.execute("CREATE TABLE IF NOT EXISTS predictions (date DATE PRIMARY KEY, price FLOAT)")
+
+
+    # commit the transaction 
+    conn.commit()
+    # Check if there's already a prediction for the next day in the database ( antitrash, to dont have a lot of identical predictions)
+    cursor.execute("SELECT * FROM predictions WHERE date=?", (str(data.iloc[-1]['Date']),))
+    result = cursor.fetchone()
+
+    if result:
+        print('Prediction for the next day already exists in the database.')
+    else:
+    # If there's no prediction for the next day yet, add it to the database
+        cursor.execute("INSERT INTO predictions (date, price) VALUES (?, ?)", (str(data.iloc[-1]['Date']), next_day_price))
+        conn.commit()
+        print('Prediction for the next day saved to the database.')
+    # close the connection with the database to problem avoidance
+    conn.close()
+else:    
     print('Restart script to use it.')
